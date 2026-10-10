@@ -14,8 +14,11 @@ This linter enforces, for every checked function signature:
 
 - context.Context, if present, is the first parameter.
 - every other parameter whose type appears in the "order" setting follows
-  the relative order given there. Parameter types absent from "order",
-  including every predeclared type (string, int, error, ...), are unchecked.
+  the relative order given there. An entry may be an exact type
+  ("import/path.Type") or a package wildcard ("import/path.*"), which
+  matches every type of that package not given its own exact entry.
+  Parameter types absent from "order", including every predeclared type
+  (string, int, error, ...), are unchecked.
 
 The "scope" setting selects which declaration kinds are checked:
 "funcdecl" (function and method declarations, on by default), "funclit"
@@ -31,6 +34,7 @@ call site, since Go arguments are positional.`
 
 type goparamorder struct {
 	order         []string
+	index         orderIndex
 	checkFuncDecl bool
 	checkFuncLit  bool
 	checkIface    bool
@@ -41,6 +45,7 @@ func New(s Settings) *analysis.Analyzer {
 	enabled := s.enabledScopes()
 	g := &goparamorder{
 		order:         s.Order,
+		index:         newOrderIndex(s.Order),
 		checkFuncDecl: enabled[scopeFuncDecl],
 		checkFuncLit:  enabled[scopeFuncLit],
 		checkIface:    enabled[scopeInterface],
@@ -91,5 +96,5 @@ func (g *goparamorder) inspect(pass *analysis.Pass, file *ast.File, n ast.Node) 
 func (g *goparamorder) check(pass *analysis.Pass, file *ast.File, params *ast.FieldList) {
 	slots := flattenParams(params)
 	checkContextFirst(pass, file, slots)
-	checkOrder(pass, file, g.order, slots)
+	checkOrder(pass, file, g.order, g.index, slots)
 }

@@ -53,3 +53,19 @@ func TestFuncDeclScopeDisabled(t *testing.T) {
 	testdata := analysistest.TestData()
 	analysistest.Run(t, testdata, New(Settings{Order: order, Scope: map[string]bool{scopeFuncDecl: false}}), "funcdecloff")
 }
+
+func TestWildcardExplicitBeforeWildcard(t *testing.T) {
+	t.Parallel()
+
+	testdata := analysistest.TestData()
+	wildcardOrder := []string{"example.com/pkg.B", "example.com/pkg.*", "example.com/other.X"}
+	analysistest.Run(t, testdata, New(Settings{Order: wildcardOrder}), "wildcard")
+}
+
+func TestWildcardExplicitAfterWildcard(t *testing.T) {
+	t.Parallel()
+
+	testdata := analysistest.TestData()
+	wildcardOrder := []string{"example.com/pkg.*", "example.com/pkg.B", "example.com/other.X"}
+	analysistest.Run(t, testdata, New(Settings{Order: wildcardOrder}), "wildcardreverse")
+}

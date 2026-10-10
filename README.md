@@ -8,6 +8,7 @@ It runs as a [golangci-lint](https://golangci-lint.run/) module plugin, built on
 
 - `context.Context`, if present, must be the first parameter.
 - Every other parameter whose type appears in the `order` setting must follow the relative order given there.
+- An `order` entry is either an exact type (`import/path.Type`) or a package wildcard (`import/path.*`). A wildcard matches every type of that package not given its own exact entry elsewhere in the list; an exact entry always takes precedence over a wildcard for the same package.
 - Parameter types absent from `order`, including every predeclared type (`string`, `int`, `error`, `any`, ...), are unchecked: their position is free.
 - Matching is by exact declared type, resolved from the file's own import list. A pointer matches the same entry as its value type (`*pkg.Config` matches `pkg.Config`).
 
@@ -60,6 +61,7 @@ linters:
           # context.Context is handled separately; do not list it here.
           order:
             - github.com/example/project.Config
+            - github.com/example/project/handler.* # every other handler type, grouped here
             - github.com/example/project.Logger
           scope: {} # e.g. {funclit: true} to also check function literals; {funcdecl: false} to turn off the default
 ```

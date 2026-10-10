@@ -19,9 +19,9 @@ var predeclared = map[string]bool{
 	"byte": true, "rune": true,
 }
 
-// resolveType reports the "import/path.TypeName" a parameter type names,
-// stripping one pointer level. Unresolvable expressions report ok=false.
-func resolveType(pass *analysis.Pass, file *ast.File, expr ast.Expr) (path string, ok bool) {
+// resolveType reports the import path and type name a parameter type
+// names, stripping one pointer level; ok is false if unresolvable.
+func resolveType(pass *analysis.Pass, file *ast.File, expr ast.Expr) (importPath, typeName string, ok bool) {
 	if star, isStar := expr.(*ast.StarExpr); isStar {
 		expr = star.X
 	}
@@ -29,26 +29,26 @@ func resolveType(pass *analysis.Pass, file *ast.File, expr ast.Expr) (path strin
 	switch t := expr.(type) {
 	case *ast.Ident:
 		if predeclared[t.Name] {
-			return "", false
+			return "", "", false
 		}
 
-		return pass.Pkg.Path() + "." + t.Name, true
+		return pass.Pkg.Path(), t.Name, true
 
 	case *ast.SelectorExpr:
 		pkgIdent, isIdent := t.X.(*ast.Ident)
 		if !isIdent {
-			return "", false
+			return "", "", false
 		}
 
 		importPath, found := resolveImport(file, pkgIdent.Name)
 		if !found {
-			return "", false
+			return "", "", false
 		}
 
-		return importPath + "." + t.Sel.Name, true
+		return importPath, t.Sel.Name, true
 
 	default:
-		return "", false
+		return "", "", false
 	}
 }
 
